@@ -71,11 +71,14 @@ LAlt::Ctrl
 <!`::^`
 
 
+
 ; right alt, meta
 
 >!d:: kill_word()
 >!b::^Left
 >!f::^Right
+>!<::move_to_start()
+>!>::move_to_end()
 
 ; Space
     
@@ -117,7 +120,13 @@ Space & k:: kill_line()
 Space & w::^w
 Space & `::^`
 
+Space & t::!t
+Space & [::![
+Space & ]::!]
 
+; alt, space
+<!q::!F4
+Space & q:: !F4
 
 #HotIf
 
@@ -150,4 +159,14 @@ kill_word()
     ;Sleep 50 ;[ms]
     Send "^x"
     Return
+}
+
+move_to_start(){
+  Send "^{Home}{Left}"
+  return
+}
+
+move_to_end(){
+  Send "^{End}{Right}"
+  return
 }

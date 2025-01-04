@@ -10,13 +10,13 @@ Capslock::Ctrl
 RCtrl::Capslock
 
 ; space
-Space::return
-Space Up::{
-  if (A_PriorKey = "Space") {
-    Send '{Space}'
-  }
-  return
-}
+; Space::return
+; Space Up::{
+;   if (A_PriorKey = "Space") {
+;     Send '{Space}'
+;   }
+;   return
+; }
 
 ; 对类似 Emacs 的应用，
 GroupAdd "EmacsLike", "ahk_class Emacs"
@@ -53,16 +53,16 @@ LAlt::Ctrl
 !=::^=
 !-::^-
 
-!1::^1
-!2::^2
-!3::^3
-!4::^4
-!5::^5
-!6::^6
-!7::^7
-!8::^8
-!9::^9
-!0::^0
+<!1::^1
+<!2::^2
+<!3::^3
+<!4::^4
+<!5::^5
+<!6::^6
+<!7::^7
+<!8::^8
+<!9::^9
+<!0::^0
 
 
 <!k:: kill_line()
@@ -70,6 +70,7 @@ LAlt::Ctrl
 <!w::^w
 <!`::^`
 
+<!o::^o
 
 
 ; right alt, meta
@@ -82,51 +83,51 @@ LAlt::Ctrl
 
 ; Space
     
-Space & p::Up
-Space & b::Left
-Space & n::Down
-Space & f::Right  
-Space & a::Send '{Home}'
-Space & e::Send '{End}'
+; Space & p::Up
+; Space & b::Left
+; Space & n::Down
+; Space & f::Right  
+; Space & a::Send '{Home}'
+; Space & e::Send '{End}'
 
-; 基本编辑
-Space & d::Del
-Space & h::Backspace
+; ; 基本编辑
+; Space & d::Del
+; Space & h::Backspace
 
-; 一些和mac类似的快捷键
-Space & z::^z ; Undo
-Space & s::^s ; Save
-Space & v::^v ; Paste
-Space & c::^c ; Copy
-Space & x::^x ; Cut
+; ; 一些和mac类似的快捷键
+; Space & z::^z ; Undo
+; Space & s::^s ; Save
+; Space & v::^v ; Paste
+; Space & c::^c ; Copy
+; Space & x::^x ; Cut
 
-; 放大缩小字体
-Space & =::^=
-Space & -::^-
+; ; 放大缩小字体
+; Space & =::^=
+; Space & -::^-
 
-Space & 1::^1
-Space & 2::^2
-Space & 3::^3
-Space & 4::^4
-Space & 5::^5
-Space & 6::^6
-Space & 7::^7
-Space & 8::^8
-Space & 9::^9
-Space & 0::^0
+; Space & 1::^1
+; Space & 2::^2
+; Space & 3::^3
+; Space & 4::^4
+; Space & 5::^5
+; Space & 6::^6
+; Space & 7::^7
+; Space & 8::^8
+; Space & 9::^9
+; Space & 0::^0
 
-Space & k:: kill_line()
+; Space & k:: kill_line()
 
-Space & w::^w
-Space & `::^`
+; Space & w::^w
+; Space & `::^`
 
-Space & t::!t
-Space & [::![
-Space & ]::!]
+; Space & t::!t
+; Space & [::![
+; Space & ]::!]
 
 ; alt, space
 <!q::!F4
-Space & q:: !F4
+; Space & q:: !F4
 
 #HotIf
 
@@ -139,9 +140,9 @@ GroupAdd "browser", "ahk_exe msedge.exe"
 <!t::^t
 <!w::^w
 <!LButton::^LButton
-Space & t::^t
-Space & w::^w
-Space & LButton::^LButton
+; Space & t::^t
+; Space & w::^w
+; Space & LButton::^LButton
 #HotIf
 
 kill_line()
@@ -169,4 +170,57 @@ move_to_start(){
 move_to_end(){
   Send "^{End}{Right}"
   return
+}
+
+
+; 屏蔽按键重复触发
+
+; 初始化变量，用于记录按键按下的时间
+lastKeyTime := Map()
+keysToWatch := ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+                "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", 
+                "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
+
+; 为每个按键绑定热键
+for key in keysToWatch {
+    Hotkey("*" key, HandleKey)  ; Use ~ to allow modifiers through
+}
+
+; 处理按键事件的函数
+HandleKey(thisHotkey, *) {
+    global lastKeyTime
+    currentKey := StrReplace(thisHotkey, "*")
+    currentTime := A_TickCount
+    timeDiff := currentTime - (lastKeyTime.Has(currentKey) ? lastKeyTime[currentKey] : 0)
+    
+    ; 检测所有修饰键状态
+    isShift := GetKeyState("Shift", "P")
+    isCtrl := GetKeyState("Ctrl", "P")
+    isAlt := GetKeyState("Alt", "P")
+    isWin := GetKeyState("LWin", "P") || GetKeyState("RWin", "P")
+    
+    ; Debug tooltip
+    ToolTip("Key: " currentKey 
+            "`nTime diff: " timeDiff "ms"
+            "`nShift: " isShift 
+            "`nCtrl: " isCtrl 
+            "`nAlt: " isAlt 
+            "`nWin: " isWin)
+    SetTimer () => ToolTip(), -1000
+    
+    if (timeDiff < 50) {
+        lastKeyTime[currentKey] := currentTime
+        return
+    }
+    
+    lastKeyTime[currentKey] := currentTime
+    
+    ; 构建发送字符串
+    modifiers := ""
+    modifiers .= isCtrl ? "^" : ""
+    modifiers .= isAlt ? "!" : ""
+    modifiers .= isShift ? "+" : ""
+    modifiers .= isWin ? "#" : ""
+    
+    Send(modifiers . currentKey)
 }

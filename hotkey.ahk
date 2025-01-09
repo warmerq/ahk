@@ -178,37 +178,40 @@ move_to_end(){
 ; 初始化变量，用于记录按键按下的时间
 lastKeyTime := Map()
 keysToWatch := ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-                "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", 
-                "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
+  "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", 
+  "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+  "Tab", "Enter", "Space", "Backspace", "Delete", "Insert", "Home", "End", "PgUp", "PgDn",
+  ",", ".", "/", ";", "'", "[", "]", "\", 
+  "-", "=", "``"]
 
 ; 为每个按键绑定热键
 for key in keysToWatch {
-    Hotkey("*" key, HandleKey)  ; Use ~ to allow modifiers through
+    Hotkey("*$" key, HandleKey)  ; Use ~ to allow modifiers through
 }
 
 ; 处理按键事件的函数
 HandleKey(thisHotkey, *) {
     global lastKeyTime
-    currentKey := StrReplace(thisHotkey, "*")
+    currentKey := StrReplace(thisHotkey, "*$")
     currentTime := A_TickCount
     timeDiff := currentTime - (lastKeyTime.Has(currentKey) ? lastKeyTime[currentKey] : 0)
     
     ; 检测所有修饰键状态
-    isShift := GetKeyState("Shift", "P")
-    isCtrl := GetKeyState("Ctrl", "P")
-    isAlt := GetKeyState("Alt", "P")
-    isWin := GetKeyState("LWin", "P") || GetKeyState("RWin", "P")
+    isShift := GetKeyState("Shift")
+    isCtrl := GetKeyState("Ctrl")
+    isAlt := GetKeyState("Alt")
+    isWin := GetKeyState("LWin") || GetKeyState("RWin")
     
     ; Debug tooltip
-    ToolTip("Key: " currentKey 
-            "`nTime diff: " timeDiff "ms"
-            "`nShift: " isShift 
-            "`nCtrl: " isCtrl 
-            "`nAlt: " isAlt 
-            "`nWin: " isWin)
-    SetTimer () => ToolTip(), -1000
+    ; ToolTip("Key: " currentKey 
+    ;         "`nTime diff: " timeDiff "ms"
+    ;         "`nShift: " isShift 
+    ;         "`nCtrl: " isCtrl 
+    ;         "`nAlt: " isAlt 
+    ;         "`nWin: " isWin)
+    ; SetTimer () => ToolTip(), -1000
     
-    if (timeDiff < 50) {
+    if (timeDiff < 100) {
         lastKeyTime[currentKey] := currentTime
         return
     }
@@ -222,5 +225,7 @@ HandleKey(thisHotkey, *) {
     modifiers .= isShift ? "+" : ""
     modifiers .= isWin ? "#" : ""
     
-    Send(modifiers . currentKey)
+    key := StrLen(currentKey) > 1 ? "{" . currentKey . "}" : currentKey 
+
+    Send(modifiers . key)
 }
